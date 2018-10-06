@@ -2,14 +2,16 @@ import discord
 import asyncio
 from discord.ext.commands import Bot
 from discord.ext import commands
+import matplotlib.pyplot as plt
 import platform
 import datetime
+import calendar
 import pytz
 import re
 import pymongo
 from pymongo import MongoClient
 
-TOKEN_PATH = None
+TOKEN_PATH = r"token.txt"
 MONGO_ADDRESS = None
 TIMEZONES_LINK = "https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568"
 db_client = pymongo.MongoClient(MONGO_ADDRESS)
@@ -29,25 +31,25 @@ def insert_server(server_object):
     serversCollection.insert_one(server_object)
 
 def update_user(id, new_values):
-    usersCollection.update_one({"id": id}, {"$set": new_values})
+    usersCollection.update_one({"id" : id}, {"$set": new_values})
 
 def update_server(id, new_values):
-    serversCollection.update_one({"id": id}, {"$set": new_values})
+    serversCollection.update_one({"id" : id}, {"$set": new_values})
 
 def remove_user(id):
-    usersCollection.delete_one({"id": id})
+    usersCollection.delete_one({"id" : id})
 
 def remove_server(id):
-    serversCollection.delete_one({"id": id})
+    serversCollection.delete_one({"id" : id})
 
 def user_exists(id):
-    return usersCollection.find({'id': id}).count() > 0
+    return usersCollection.find({"id" : id}).count() > 0
 
 def server_exists(id):
-    return serversCollection.find({'id': id}).count() > 0
+    return serversCollection.find({"id" : id}).count() > 0
 
 def get_bd_channel_id(server_id):
-    return serversCollection.find_one({"id": server_id})["birthday_channel_id"]
+    return serversCollection.find_one({"id" : server_id})["birthday_channel_id"]
 
 def get_users_data():
     return usersCollection.find()
@@ -57,6 +59,12 @@ def get_servers_data():
 
 def get_users_count():
     return usersCollection.find().count()
+
+def get_user_object(id):
+    return usersCollection.find_one({"id" : id})
+
+def get_server_object(id):
+    return serversCollection.find_one({"id" : id})
 
 def all_are_integers(args):
     for arg in args:
@@ -100,7 +108,7 @@ def get_age_with_postfix(age):
 	    age_str = f"{age}th"
     return age_str
 
-bot = Bot(description="This is a bot whose main purpose is to announce birthdays", command_prefix="!", pm_help = False)
+bot = Bot(description="This is a bot whose main purpose is to announce birthdays", command_prefix="~", pm_help = False)
 bot.remove_command('help')
 
 help_embed = discord.Embed(title="Birthday Bot Manual", description="A list of useful commands", color=0xFF0000)
@@ -109,6 +117,7 @@ help_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Se
 help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
 
@@ -132,14 +141,20 @@ async def announce_birthdays():
                         channel = guild.get_channel(server["birthday_channel_id"])
                         member = guild.get_member(user["id"])
                         if user["hide_age"] == True:
-                            await channel.send(f"Happy Birthday {member.mention}! :confetti_ball:")
+                            try:
+                                await channel.send(f"Happy Birthday {member.mention}! :confetti_ball:")
+                            except:
+                                pass
                         else:
                             age = user_time.year - user_birthday.year
-                            await channel.send(f"Happy {get_age_with_postfix(age)} Birthday {member.mention}! :confetti_ball:")
+                            try:
+                                await channel.send(f"Happy {get_age_with_postfix(age)} Birthday {member.mention}! :confetti_ball:")
+                            except:
+                                pass
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user.name} (ID: {str(bot.user.id)}) | Connected to {str(len(bot.guilds))} servers | Connected to {str(len(set(bot.get_all_members())))} users")
+    print(f"Logged in as {bot.user.name} (ID: {str(bot.user.id)}) | Connected to {len(bot.guilds)} servers | Connected to {len(set(bot.get_all_members()))} users")
     print('--------')
     print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__, platform.python_version()))
     print('--------')
@@ -158,8 +173,9 @@ async def on_message(message):
 
 @bot.event
 async def on_guild_join(guild):
-    server_object = {"id": guild.id, "birthday_channel_id": None}
-    insert_server(server_object)
+    if not server_exists(guild.id):
+        server_object = {"id": guild.id, "birthday_channel_id": None}
+        insert_server(server_object)
 
 @bot.event
 async def on_guild_channel_delete(channel):
@@ -179,13 +195,14 @@ async def help(ctx):
 
 @bot.command()
 async def birthday(ctx, *args):
-    if user_exists(ctx.author.id):
-        return await ctx.send("You are already registered.")
-    elif len(args) != 3:
+    if len(args) != 3:
         return await ctx.send(f"Usage: {bot.command_prefix}birthday *year* *month* *day*")
     if all_are_integers(args):
         year, month, day = map(lambda x : int(x), args)  
         if check_date(year, month, day):
+            if user_exists(ctx.author.id):
+                update_user(ctx.author.id, {"birth_date" : datetime.datetime(year, month, day, 0, 0, 0)})
+                return await ctx.send(f"Your birth date has been updated. {ctx.author.mention}")
             user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False}
             insert_user(user_object)
             await ctx.send(f"Your birthday was added! {ctx.author.mention}\n \
@@ -193,7 +210,7 @@ async def birthday(ctx, *args):
             If you don't want your age to appear in the birthday announcement, type `{bot.command_prefix}hide_age`")
             await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
         else:
-            return await ctx.send("Invalid date")
+            return await ctx.send("Invalid date.")
     else:
         await ctx.send(f"Usage: {bot.command_prefix}birthday *year* *month* *day*") 
 
@@ -227,6 +244,22 @@ async def show_age(ctx):
         return await ctx.send(f"You must be registered first. Add your birthday with `{bot.command_prefix}birthday`")
     update_user(ctx.author.id, {"hide_age" : False})
     await ctx.send("Your age will appear in the birthday announcement.")
+
+@bot.command()
+async def stats(ctx):
+    server = get_server_object(ctx.guild.id)
+    stats_embed = discord.Embed(title=f"Stats for {ctx.guild.name}", color=0xFF0000)
+    birthday_count = 0
+    for member in ctx.guild.members:
+        if user_exists(member.id):
+            birthday_count += 1
+    bday_channel = ctx.guild.get_channel(server["birthday_channel_id"])
+    channel_name = "(Not set)"
+    if bday_channel is not None:
+        channel_name = bday_channel.name
+    stats_embed.add_field(name="Birthday Count", value=str(birthday_count), inline=False)
+    stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
+    await ctx.send(embed=stats_embed)
 
 @bot.command()
 async def channel(ctx, *args):
