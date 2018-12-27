@@ -8,6 +8,7 @@ import datetime
 import calendar
 import pytz
 import re
+import dbl
 import pymongo
 from pymongo import MongoClient
 
@@ -20,11 +21,6 @@ db_client = pymongo.MongoClient(config_data["mongo_address"])
 database = db_client[""]
 usersCollection = database[""]
 serversCollection = database[""]
-
-def get_token(file_name):
-	with open(file_name, "r") as f:
-		token = f.read()
-	return token
 
 def insert_user(user_object):
     usersCollection.insert_one(user_object)
@@ -123,6 +119,8 @@ help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats fo
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
 
+dblpy = dbl.Client(bot, config_data["dbl_token"])
+
 async def announce_birthdays():
     await bot.wait_until_ready()
     while not bot.is_closed():
@@ -166,15 +164,21 @@ async def on_ready():
     print('--------')
     print('Use this link to invite {}:'.format(bot.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=335727616'.format(bot.user.id))
-    await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
+    await bot.change_presence(activity=discord.Streaming(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help", url="https://twitch.tv/icepocket"))
     help_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
         if not server_exists(guild.id):
             server_object = {"id" : guild.id, "birthday_channel_id" : None}
             insert_server(server_object)
+    await dblpy.post_server_count()
 
 @bot.event
 async def on_message(message):
+    if "<@" + str(bot.user.id) + ">" in message.content:
+        try:
+            await message.channel.send(f"type `{bot.command_prefix}help`")
+        except:
+            pass
     await bot.process_commands(message)
 
 @bot.event
@@ -182,6 +186,7 @@ async def on_guild_join(guild):
     if not server_exists(guild.id):
         server_object = {"id": guild.id, "birthday_channel_id": None}
         insert_server(server_object)
+        await dblpy.post_server_count()
 
 @bot.event
 async def on_guild_channel_delete(channel):
@@ -194,6 +199,7 @@ async def on_guild_channel_delete(channel):
 @bot.event
 async def on_guild_remove(guild):
     remove_server(guild.id)
+    await dblpy.post_server_count()
 
 @bot.command()
 async def help(ctx):
