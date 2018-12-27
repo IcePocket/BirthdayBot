@@ -98,23 +98,23 @@ def check_date(year, month, day):
 def is_channel_mention(arg):
 	return bool(re.search(r'<#\d{18}>', arg))
 
-def get_age_with_postfix(age):
-    age_str = ""
-    if age % 10 == 1 and age // 10 != 1:
-        age_str = f"{age}st"
-    elif age % 10 == 2 and age // 10 != 1:
-	    age_str = f"{age}nd"
-    elif age % 10 == 3 and age // 10 != 1:
-	    age_str = f"{age}rd"
+def get_number_with_postfix(num):
+    num_str = ""
+    if num % 10 == 1 and num // 10 != 1:
+        num_str = f"{num}st"
+    elif num % 10 == 2 and num // 10 != 1:
+	    num_str = f"{num}nd"
+    elif num % 10 == 3 and num // 10 != 1:
+	    num_str = f"{num}rd"
     else:
-	    age_str = f"{age}th"
-    return age_str
+	    num_str = f"{num}th"
+    return num_str
 
 bot = Bot(description="This is a bot whose main purpose is to announce birthdays", command_prefix="~", pm_help = False)
 bot.remove_command('help')
 
 help_embed = discord.Embed(title="Birthday Bot Manual", description="A list of useful commands", color=0xFF0000)
-help_embed.add_field(name=f"{bot.command_prefix}birthday *year* *month* *day*", value="Add your birthday.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}birthday *year* *month* *day*", value="Add or update your birthday.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Set your time zone. Make sure to write it just like it's written on the list.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
@@ -139,20 +139,24 @@ async def announce_birthdays():
             if user_time.hour == 0 and user_time.minute == 0 and user_birthday.month == user_time.month and user_birthday.day == user_time.day:
                 for server in get_servers_data():
                     guild = discord.utils.get(bot.guilds, id=server["id"])
+                    if guild is None:
+                        continue
                     if guild.get_member(user["id"]) is not None and server["birthday_channel_id"] != None:
                         channel = guild.get_channel(server["birthday_channel_id"])
                         member = guild.get_member(user["id"])
-                        if user["hide_age"] == True:
-                            try:
-                                await channel.send(f"Happy Birthday {member.mention}! :confetti_ball:")
-                            except:
-                                pass
-                        else:
-                            age = user_time.year - user_birthday.year
-                            try:
-                                await channel.send(f"Happy {get_age_with_postfix(age)} Birthday {member.mention}! :confetti_ball:")
-                            except:
-                                pass
+                        if channel is None or member is None:
+                            continue
+                        try:
+                            embed = discord.Embed(title=f"Happy Birthday {member.name}! :tada:", description="", color=0xFF0000)
+                            embed.description += f"{calendar.month_name[user_time.month]} {get_number_with_postfix(user_time.day)}"
+                            embed.set_thumbnail(url=member.avatar_url)
+                            embed.set_footer(text=str(member))
+                            if user["hide_age"] == False:
+                                age = user_time.year - user_birthday.year
+                                embed.title = f"Happy {get_number_with_postfix(age)} Birthday {member.name}! :tada:"
+                            await channel.send(embed=embed)  
+                        except:
+                            pass
 
 @bot.event
 async def on_ready():
@@ -204,12 +208,17 @@ async def birthday(ctx, *args):
         if check_date(year, month, day):
             if user_exists(ctx.author.id):
                 update_user(ctx.author.id, {"birth_date" : datetime.datetime(year, month, day, 0, 0, 0)})
-                return await ctx.send(f"Your birth date has been updated. {ctx.author.mention}")
+                embed = discord.Embed(title="Birth Date Updated.", color=0xFF0000)
+                embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+                return await ctx.send(embed=embed)
             user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False}
             insert_user(user_object)
-            await ctx.send(f"Your birthday was added! {ctx.author.mention}\n \
-            Make sure to update your time zone with `{bot.command_prefix}timezone`, the default time zone is UTC\n \
-            If you don't want your age to appear in the birthday announcement, type `{bot.command_prefix}hide_age`")
+            embed = discord.Embed(title="Birthday Added!", description="", color=0xFF0000)
+            embed.description += f"Use `{bot.command_prefix}timezone` to update your time zone.\n"
+            embed.description += f"Type `{bot.command_prefix}hide_age` if you don't want your age to appear in birthday announcements."
+            embed.set_author(name=str(ctx.author))
+            embed.set_thumbnail(url=ctx.author.avatar_url)
+            await ctx.send(embed=embed)
             await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
         else:
             return await ctx.send("Invalid date.")
@@ -225,7 +234,9 @@ async def timezone(ctx, *args):
     try:
         pytz.timezone(args[0])
         update_user(ctx.author.id, {"time_zone" : args[0]})
-        return await ctx.send(f"Your time zone has been updated to `{args[0]}`.")
+        embed = discord.Embed(title="Time Zone Updated.", description=f"Your new time zone - {args[0]}", color=0xFF0000)
+        embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+        return await ctx.send(embed=embed)
     except:
         await ctx.send(f"Invalid time zone. Make sure your time zone is written here:\n{timezones_link}")
 
@@ -238,14 +249,19 @@ async def hide_age(ctx):
     if not user_exists(ctx.author.id):
         return await ctx.send(f"You must be registered first. Add your birthday with `{bot.command_prefix}birthday`")
     update_user(ctx.author.id, {"hide_age" : True})
-    await ctx.send(f"Your age will not appear in the birthday announcement.\nTo undo this action, type `{bot.command_prefix}show_age`")
+    embed = discord.Embed(title="Age is now hidden.", description="Your age will not appear in birthday announcements.", color=0xFF0000)
+    embed.description += f"\nTo undo this action, type `{bot.command_prefix}show_age`"
+    embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def show_age(ctx):
     if not user_exists(ctx.author.id):
         return await ctx.send(f"You must be registered first. Add your birthday with `{bot.command_prefix}birthday`")
     update_user(ctx.author.id, {"hide_age" : False})
-    await ctx.send("Your age will appear in the birthday announcement.")
+    embed = discord.Embed(title="Age is now visible.", description="Your age will appear in birthday announcements.", color=0xFF0000)
+    embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def stats(ctx):
@@ -256,11 +272,12 @@ async def stats(ctx):
         if user_exists(member.id):
             birthday_count += 1
     bday_channel = ctx.guild.get_channel(server["birthday_channel_id"])
-    channel_name = "(Not set)"
+    channel_name = "N/A"
     if bday_channel is not None:
         channel_name = bday_channel.name
     stats_embed.add_field(name="Birthday Count", value=str(birthday_count), inline=False)
     stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
+    stats_embed.set_thumbnail(url=ctx.guild.icon_url)
     await ctx.send(embed=stats_embed)
 
 @bot.command()
@@ -274,7 +291,11 @@ async def channel(ctx, *args):
         if ch.is_nsfw() or isinstance(ch, discord.abc.PrivateChannel):
             return await ctx.send("Please select a channel without any restrictions (not private or nsfw).")
         update_server(ctx.guild.id, {"birthday_channel_id" : ch.id})
-        return await ctx.send(f"The birthday announcement channel for this server has been updated to `{ch.name}`")
+        embed = discord.Embed(title="Birthday Announcement Channel Updated.", description="", color=0xFF0000)
+        embed.description += f"New birthday announcement channel - {ch.name}"
+        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        embed.set_thumbnail(url=bot.user.avatar_url)
+        return await ctx.send(embed=embed)
     else:
         await ctx.send("Please mention a channel")
 
