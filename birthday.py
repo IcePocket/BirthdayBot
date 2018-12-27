@@ -2,7 +2,7 @@ import discord
 import asyncio
 from discord.ext.commands import Bot
 from discord.ext import commands
-import matplotlib.pyplot as plt
+import json
 import platform
 import datetime
 import calendar
@@ -11,10 +11,12 @@ import re
 import pymongo
 from pymongo import MongoClient
 
-TOKEN_PATH = r"token.txt"
-MONGO_ADDRESS = None
-TIMEZONES_LINK = "https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568"
-db_client = pymongo.MongoClient(MONGO_ADDRESS)
+config_path = None
+config_file = open(config_path, "r")
+config_data = json.load(config_file)
+
+timezones_link = config_data["timezones_link"]
+db_client = pymongo.MongoClient(config_data["mongo_address"])
 database = db_client[""]
 usersCollection = database[""]
 serversCollection = database[""]
@@ -154,12 +156,12 @@ async def announce_birthdays():
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user.name} (ID: {str(bot.user.id)}) | Connected to {len(bot.guilds)} servers | Connected to {len(set(bot.get_all_members()))} users")
+    print(f"Logged in as {bot.user.name} (ID: {bot.user.id}) | Connected to {len(bot.guilds)} servers | Connected to {len(set(bot.get_all_members()))} users")
     print('--------')
     print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__, platform.python_version()))
     print('--------')
     print('Use this link to invite {}:'.format(bot.user.name))
-    print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=104254528'.format(bot.user.id))
+    print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=335727616'.format(bot.user.id))
     await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
     help_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
@@ -225,11 +227,11 @@ async def timezone(ctx, *args):
         update_user(ctx.author.id, {"time_zone" : args[0]})
         return await ctx.send(f"Your time zone has been updated to `{args[0]}`.")
     except:
-        await ctx.send(f"Invalid time zone. Make sure your time zone is written here:\n{TIMEZONES_LINK}")
+        await ctx.send(f"Invalid time zone. Make sure your time zone is written here:\n{timezones_link}")
 
 @bot.command()
 async def timezones(ctx):
-    await ctx.send(TIMEZONES_LINK)
+    await ctx.send(timezones_link)
 
 @bot.command()
 async def hide_age(ctx):
@@ -277,4 +279,4 @@ async def channel(ctx, *args):
         await ctx.send("Please mention a channel")
 
 bot.loop.create_task(announce_birthdays())
-bot.run(get_token(TOKEN_PATH))
+bot.run(config_data["token"])
