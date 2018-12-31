@@ -10,7 +10,6 @@ import pytz
 import re
 import dbl
 import pymongo
-from pymongo import MongoClient
 
 config_path = None
 config_file = open(config_path, "r")
@@ -82,6 +81,42 @@ def is_leap_year(year):
     else:
         return False
 
+
+def user_sort_key(user):
+    now = datetime.datetime.now()
+    date = user["birth_date"]
+    if date.month < now.month:
+        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+    elif date.month == now.month and date.day < now.day:
+        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+    else:
+        new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
+    delta = new_date - now
+    return delta.days
+
+def close_birthday(date):
+    now = datetime.datetime.now()
+    if date.month < now.month:
+        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+    elif date.month == now.month and date.day < now.day:
+        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+    else:
+        new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
+    delta = new_date - now
+    return delta.days <= 30
+
+def recent_birthday(date):
+    now = datetime.datetime.now()
+    if date.month > now.month:
+        new_date = datetime.datetime(now.year - 1, date.month, date.day, 0, 0, 0)
+    elif date.month == now.month and date.day > now.day:
+        new_date = datetime.datetime(now.year - 1, date.month, date.day, 0, 0, 0)
+    else:
+        new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
+    delta = now - new_date
+    return delta.days <= 30
+         
+    
 def check_date(year, month, day):
     if (not 1970 <= year <= datetime.datetime.now().year - 5) or (not 1 <= month <= 12) or (not 1 <= day <= 31):
         return False
@@ -115,6 +150,7 @@ help_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Se
 help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
@@ -168,7 +204,7 @@ async def on_ready():
     help_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
         if not server_exists(guild.id):
-            server_object = {"id" : guild.id, "birthday_channel_id" : None}
+            server_object = {"id" : guild.id, "birthday_channel_id" : None, "user_ids" : []}
             insert_server(server_object)
     await dblpy.post_server_count()
 
@@ -184,7 +220,7 @@ async def on_message(message):
 @bot.event
 async def on_guild_join(guild):
     if not server_exists(guild.id):
-        server_object = {"id": guild.id, "birthday_channel_id": None}
+        server_object = {"id": guild.id, "birthday_channel_id": None , "user_ids" : []}
         insert_server(server_object)
         await dblpy.post_server_count()
 
@@ -195,6 +231,18 @@ async def on_guild_channel_delete(channel):
             await channel.guild.owner.create_dm()
         await channel.guild.owner.dm_channel.send(f"The birthday announcement channel in your server **{channel.guild.name}** was deleted.\nPlease set a new announcement channel.")
         update_server(channel.guild.id, {"birthday_channel_id" : None})
+
+@bot.event
+async def on_guild_channel_update(before, after):
+    if get_bd_channel_id(after.guild.id) == after.id:
+        if not after.permissions_for(after.guild.get_member(bot.user.id)).send_messages:
+            if after.guild.owner.dm_channel == None:
+                await after.guild.owner.create_dm()
+            await after.guild.owner.dm_channel.send(f"The birthday announcement channel in your server **{after.guild.name}** was updated.\n" + \
+            "The update resulted in me not having the permission to send messages to that channel.\n" + \
+            "Please set a new announcement channel.")
+            update_server(after.guild.id, {"birthday_channel_id" : None})
+
 
 @bot.event
 async def on_guild_remove(guild):
@@ -217,7 +265,7 @@ async def birthday(ctx, *args):
                 embed = discord.Embed(title="Birth Date Updated.", color=0xFF0000)
                 embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
                 return await ctx.send(embed=embed)
-            user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False}
+            user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False, "server_ids" : []}
             insert_user(user_object)
             embed = discord.Embed(title="Birthday Added!", description="", color=0xFF0000)
             embed.description += f"Use `{bot.command_prefix}timezone` to update your time zone.\n"
@@ -270,7 +318,67 @@ async def show_age(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+async def upcoming(ctx):
+    if ctx.guild is None:
+        return await ctx.send("This command is only available in servers.")
+    embed = discord.Embed(title=f"Upcoming birthdays in {ctx.guild.name}", description="", color=0xFF0000)
+    embed.set_thumbnail(url=ctx.guild.icon_url)
+    users = []
+    for user in get_users_data():
+        if ctx.guild.get_member(user["id"]) is not None:
+            users.append(user)
+    if len(users) == 0:
+        embed.description = "No upcoming birthdays."
+        return await ctx.send(embed=embed)
+    users.sort(key=user_sort_key)
+    now = datetime.datetime.now()
+    for user in users:
+        date = user["birth_date"]
+        now = datetime.datetime.now()
+        if not close_birthday(date):
+            continue
+        member = ctx.guild.get_member(user["id"])
+        year = datetime.datetime.now().year
+        if date.month < now.month:
+            year += 1
+        embed.add_field(name=f"{member.name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
+    if len(embed.fields) == 0:
+        embed.description = "No upcoming birthdays."
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def recent(ctx):
+    if ctx.guild is None:
+        return await ctx.send("This command is only available in servers.")
+    embed = discord.Embed(title=f"Recent birthdays in {ctx.guild.name}", description="", color=0xFF0000)
+    embed.set_thumbnail(url=ctx.guild.icon_url)
+    users = []
+    for user in get_users_data():
+        if ctx.guild.get_member(user["id"]) is not None:
+            users.append(user)
+    if len(users) == 0:
+        embed.description = "No recent birthdays."
+        return await ctx.send(embed=embed)
+    users.sort(key=user_sort_key, reverse=True)
+    now = datetime.datetime.now()
+    for user in users:
+        date = user["birth_date"]
+        now = datetime.datetime.now()
+        if not recent_birthday(date):
+            continue
+        member = ctx.guild.get_member(user["id"])
+        year = datetime.datetime.now().year
+        if date.month > now.month:
+            year -= 1
+        embed.add_field(name=f"{member.name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
+    if len(embed.fields) == 0:
+        embed.description = "No recent birthdays."
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def stats(ctx):
+    if ctx.guild is None:
+        return await ctx.send("This command is only available in servers.")
     server = get_server_object(ctx.guild.id)
     stats_embed = discord.Embed(title=f"Stats for {ctx.guild.name}", color=0xFF0000)
     birthday_count = 0
@@ -288,13 +396,15 @@ async def stats(ctx):
 
 @bot.command()
 async def channel(ctx, *args):
+    if ctx.guild is None:
+        return await ctx.send("This command is only available in servers.")
     if len(args) == 0:
         return await ctx.send(f"Usage: {bot.command_prefix}channel *channel_mention*")
     elif not ctx.message.author.guild_permissions.administrator:
         return await ctx.send("You must be an administrator to use this command")
     if is_channel_mention(args[0]):
         ch = ctx.guild.get_channel(int(args[0][2:-1]))
-        if ch.is_nsfw() or isinstance(ch, discord.abc.PrivateChannel):
+        if ch.is_nsfw():
             return await ctx.send("Please select a channel without any restrictions (not private or nsfw).")
         update_server(ctx.guild.id, {"birthday_channel_id" : ch.id})
         embed = discord.Embed(title="Birthday Announcement Channel Updated.", description="", color=0xFF0000)
