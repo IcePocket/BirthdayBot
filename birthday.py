@@ -11,15 +11,15 @@ import re
 import dbl
 import pymongo
 
-config_path = "./config.json"
+config_path = ""
 config_file = open(config_path, "r")
 config_data = json.load(config_file)
 
-timezones_link = config_data["timezones_link"]
-db_client = pymongo.MongoClient(config_data["mongo_address"])
-database = db_client["EmilyDB"]
-usersCollection = database["users"]
-serversCollection = database["servers"]
+timezones_link = config_data[""]
+db_client = pymongo.MongoClient(config_data[""])
+database = db_client[""]
+usersCollection = database[""]
+serversCollection = database[""]
 
 def insert_user(user_object):
     usersCollection.insert_one(user_object)
