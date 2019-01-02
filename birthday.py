@@ -11,15 +11,15 @@ import re
 import dbl
 import pymongo
 
-config_path = None
+config_path = "./config.json"
 config_file = open(config_path, "r")
 config_data = json.load(config_file)
 
 timezones_link = config_data["timezones_link"]
 db_client = pymongo.MongoClient(config_data["mongo_address"])
-database = db_client[""]
-usersCollection = database[""]
-serversCollection = database[""]
+database = db_client["EmilyDB"]
+usersCollection = database["users"]
+serversCollection = database["servers"]
 
 def insert_user(user_object):
     usersCollection.insert_one(user_object)
@@ -151,7 +151,6 @@ help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
@@ -160,7 +159,7 @@ dblpy = dbl.Client(bot, config_data["dbl_token"])
 
 async def announce_birthdays():
     await bot.wait_until_ready()
-    while not bot.is_closed():
+    while not bot.is_closed:
         minute = datetime.datetime.now().minute
         second = datetime.datetime.now().second
         while second != 0 or (minute != 0 and minute != 30 and minute != 45):
@@ -201,7 +200,7 @@ async def on_ready():
     print('--------')
     print('Use this link to invite {}:'.format(bot.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=335727616'.format(bot.user.id))
-    await bot.change_presence(activity=discord.Streaming(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help", url="https://twitch.tv/icepocket"))
+    await bot.change_presence(game=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))    
     help_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
         if not server_exists(guild.id):
@@ -216,7 +215,8 @@ async def on_message(message):
             await message.channel.send(f"type `{bot.command_prefix}help`")
         except:
             pass
-    await bot.process_commands(message)
+    if not message.author.bot:
+        await bot.process_commands(message)
 
 @bot.event
 async def on_guild_join(guild):
@@ -266,15 +266,18 @@ async def birthday(ctx, *args):
                 embed = discord.Embed(title="Birth Date Updated.", color=0xFF0000)
                 embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
                 return await ctx.send(embed=embed)
+                
             user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False, "server_ids" : []}
             insert_user(user_object)
+
             embed = discord.Embed(title="Birthday Added!", description="", color=0xFF0000)
             embed.description += f"Use `{bot.command_prefix}timezone` to update your time zone.\n"
             embed.description += f"Type `{bot.command_prefix}hide_age` if you don't want your age to appear in birthday announcements."
             embed.set_author(name=str(ctx.author))
             embed.set_thumbnail(url=ctx.author.avatar_url)
+
             await ctx.send(embed=embed)
-            await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
+            await bot.change_presence(game=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
         else:
             return await ctx.send("Invalid date.")
     else:
