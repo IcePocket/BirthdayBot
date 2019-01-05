@@ -197,10 +197,9 @@ async def announce_birthdays():
 
 async def post_server_count(bot):
     url = f"https://botsfordiscord.com/api/bot/{bot.user.id}"
-    data = {"Content-Type" : "application/json", "Authorization" : config_data["bfd_token"], "server_count" : len(bot.guilds)}
-    r = requests.post(url=url, json=json.dumps(data))
-    if r.status_code != 200:
-        print(r.content)    
+    headers = {"Content-Type" : "application/json", "Authorization" : config_data["bfd_token"]}
+    data = {"server_count" : len(bot.guilds)}
+    requests.post(url=url, headers=headers, data=json.dumps(data))  
 
 @bot.event
 async def on_ready():
