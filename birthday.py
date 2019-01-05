@@ -197,11 +197,10 @@ async def announce_birthdays():
 
 async def post_server_count(bot):
     url = f"https://botsfordiscord.com/api/bot/{bot.user.id}"
-    headers = {"Content-Type" : "application/json", "Authorization" : config_data["bfd_token"]}
-    data = json.dumps({"server_count" : len(bot.guilds)})
-    r = requests.post(url=url, headers=headers, json=data)
+    data = {"Content-Type" : "application/json", "Authorization" : config_data["bfd_token"], "server_count" : len(bot.guilds)}
+    r = requests.post(url=url, json=json.dumps(data))
     if r.status_code != 200:
-        print("Failed to post server count to botsfordiscord.com")    
+        print(r.content)    
 
 @bot.event
 async def on_ready():
@@ -446,6 +445,7 @@ async def info(ctx):
     embed.add_field(name="Registered Users", value=str(get_users_count()), inline=True)
     embed.add_field(name="Support Server", value="https://discord.gg/u8HNKvr", inline=True)
     embed.add_field(name="Credits", value="Arik#8773 - Creator, Discord API developer\nMr Doctor Professor Patrick#7943 - Host, MongoDB developer", inline=False)
+    embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed)
 
 bot.loop.create_task(announce_birthdays())
