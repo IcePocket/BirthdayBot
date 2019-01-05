@@ -151,8 +151,8 @@ help_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Se
 help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}info", value="View general info about the bot.", inline=False)
@@ -218,6 +218,7 @@ async def on_ready():
             server_object = {"id" : guild.id, "birthday_channel_id" : None, "user_ids" : []}
             insert_server(server_object)
     await dblpy.post_server_count()
+    await post_server_count(bot)
 
 @bot.event
 async def on_message(message):
@@ -235,6 +236,7 @@ async def on_guild_join(guild):
         server_object = {"id": guild.id, "birthday_channel_id": None , "user_ids" : []}
         insert_server(server_object)
         await dblpy.post_server_count()
+        await post_server_count(bot)
 
 @bot.event
 async def on_guild_channel_delete(channel):
@@ -260,6 +262,7 @@ async def on_guild_channel_update(before, after):
 async def on_guild_remove(guild):
     remove_server(guild.id)
     await dblpy.post_server_count()
+    await post_server_count(bot)
 
 @bot.command()
 async def help(ctx):
