@@ -152,8 +152,10 @@ help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}info", value="View general info about the bot.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
 
 dblpy = dbl.Client(bot, config_data["dbl_token"])
