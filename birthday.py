@@ -3,6 +3,7 @@ import asyncio
 from discord.ext.commands import Bot
 from discord.ext import commands
 import json
+import requests
 import platform
 import datetime
 import calendar
@@ -192,6 +193,14 @@ async def announce_birthdays():
                         except:
                             pass
 
+async def post_server_count(bot):
+    url = f"https://botsfordiscord.com/api/bot/{bot.user.id}"
+    headers = {"Content-Type" : "application/json", "Authorization" : config_data["bfd_token"]}
+    data = json.dumps({"server_count" : len(bot.guilds)})
+    r = requests.post(url=url, headers=headers, json=data)
+    if r.status_code != 200:
+        print("Failed to post server count to botsfordiscord.com")    
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user.name} (ID: {bot.user.id}) | Connected to {len(bot.guilds)} servers | Connected to {len(set(bot.get_all_members()))} users")
@@ -210,7 +219,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if "<@" + str(bot.user.id) + ">" in message.content:
+    if "<@" + str(bot.user.id) + ">" in message.content and not message.author.bot:
         try:
             await message.channel.send(f"type `{bot.command_prefix}help`")
         except:
@@ -325,6 +334,8 @@ async def show_age(ctx):
 async def upcoming(ctx):
     if ctx.guild is None:
         return await ctx.send("This command is only available in servers.")
+    elif not user_exists(ctx.author.id):
+        return await ctx.send("If you want to see other people's birthdays, you must add your own!")
     embed = discord.Embed(title=f"Upcoming birthdays in {ctx.guild.name}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
     users = []
@@ -354,6 +365,8 @@ async def upcoming(ctx):
 async def recent(ctx):
     if ctx.guild is None:
         return await ctx.send("This command is only available in servers.")
+    elif not user_exists(ctx.author.id):
+        return await ctx.send("If you want to see other people's birthdays, you must add your own!")
     embed = discord.Embed(title=f"Recent birthdays in {ctx.guild.name}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
     users = []
@@ -418,6 +431,17 @@ async def channel(ctx, *args):
         return await ctx.send(embed=embed)
     else:
         await ctx.send("Please mention a channel")
+
+@bot.command()
+async def info(ctx):
+    embed = discord.Embed(title="Info", description="General info about the bot", color=0xFF0000)
+    embed.add_field(name="Python Version", value=platform.python_version(), inline=True)
+    embed.add_field(name="discord.py Version", value=discord.__version__, inline=True)
+    embed.add_field(name="Servers", value=str(len(bot.guilds)), inline=True)
+    embed.add_field(name="Registered Users", value=str(get_users_count()), inline=True)
+    embed.add_field(name="Support Server", value="https://discord.gg/u8HNKvr", inline=True)
+    embed.add_field(name="Credits", value="Arik#8773 - Creator, Discord API developer\nMr Doctor Professor Patrick#7943 - Host, MongoDB developer", inline=False)
+    await ctx.send(embed=embed)
 
 bot.loop.create_task(announce_birthdays())
 bot.run(config_data["token"])
