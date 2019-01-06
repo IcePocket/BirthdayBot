@@ -162,7 +162,7 @@ dblpy = dbl.Client(bot, config_data["dbl_token"])
 
 async def announce_birthdays():
     await bot.wait_until_ready()
-    while not bot.is_closed:
+    while True:
         minute = datetime.datetime.now().minute
         second = datetime.datetime.now().second
         while second != 0 or (minute != 0 and minute != 30 and minute != 45):
