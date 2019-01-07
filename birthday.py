@@ -359,7 +359,7 @@ async def upcoming(ctx):
         year = datetime.datetime.now().year
         if date.month < now.month:
             year += 1
-        embed.add_field(name=f"{member.name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
+        embed.add_field(name=f"{member.nick} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
     if len(embed.fields) == 0:
         embed.description = "No upcoming birthdays."
     await ctx.send(embed=embed)
@@ -390,7 +390,7 @@ async def recent(ctx):
         year = datetime.datetime.now().year
         if date.month > now.month:
             year -= 1
-        embed.add_field(name=f"{member.name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
+        embed.add_field(name=f"{member.nick} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
     if len(embed.fields) == 0:
         embed.description = "No recent birthdays."
     await ctx.send(embed=embed)
