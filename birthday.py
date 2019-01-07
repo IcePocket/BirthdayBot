@@ -184,13 +184,16 @@ async def announce_birthdays():
                         if channel is None or member is None:
                             continue
                         try:
-                            embed = discord.Embed(title=f"Happy Birthday {member.name}! :tada:", description="", color=0xFF0000)
+                            name = member.name
+                            if member.nick is not None:
+                                name = member.nick
+                            embed = discord.Embed(title=f"Happy Birthday {name}! :tada:", description="", color=0xFF0000)
                             embed.description += f"{calendar.month_name[user_time.month]} {get_number_with_postfix(user_time.day)}"
                             embed.set_thumbnail(url=member.avatar_url)
                             embed.set_footer(text=str(member))
                             if user["hide_age"] == False:
                                 age = user_time.year - user_birthday.year
-                                embed.title = f"Happy {get_number_with_postfix(age)} Birthday {member.name}! :tada:"
+                                embed.title = f"Happy {get_number_with_postfix(age)} Birthday {name}! :tada:"
                             await channel.send(embed=embed)  
                         except:
                             pass
@@ -359,7 +362,10 @@ async def upcoming(ctx):
         year = datetime.datetime.now().year
         if date.month < now.month:
             year += 1
-        embed.add_field(name=f"{member.nick} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
+        name = member.name
+        if member.nick is not None:
+            name = member.nick
+        embed.add_field(name=f"{name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
     if len(embed.fields) == 0:
         embed.description = "No upcoming birthdays."
     await ctx.send(embed=embed)
@@ -390,7 +396,10 @@ async def recent(ctx):
         year = datetime.datetime.now().year
         if date.month > now.month:
             year -= 1
-        embed.add_field(name=f"{member.nick} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
+        name = member.name
+        if member.nick is not None:
+            name = member.nick
+        embed.add_field(name=f"{name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
     if len(embed.fields) == 0:
         embed.description = "No recent birthdays."
     await ctx.send(embed=embed)
