@@ -456,5 +456,30 @@ async def info(ctx):
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed)
 
+@bot.command()
+async def broadcast(ctx, *args):
+    if ctx.guild is not None:
+        return
+    elif ctx.author.id not in config_data["admin_ids"]:
+        return
+    elif len(args) == 0:
+        return await ctx.send("You must enter a message.")
+    count = 0
+    msg = ""
+    for arg in args:
+        msg += arg
+    for server in get_servers_data():
+        try:
+            guild = discord.utils.get(bot.guilds, id=server["id"])
+            channel = guild.get_channel(server["birthday_channel_id"])
+            if channel is not None:
+                count += 1
+                await channel.send("**This is a message from the administrators of BirthdayBot:**\n" + msg)
+        except:
+            pass
+    await ctx.send(f"The message was sent to {count} servers.")
+
+
+
 bot.loop.create_task(announce_birthdays())
 bot.run(config_data["token"])
