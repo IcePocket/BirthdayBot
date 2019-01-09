@@ -287,11 +287,11 @@ async def on_guild_channel_delete(channel):
 @bot.event
 async def on_guild_channel_update(before, after):
     if get_bd_channel_id(after.guild.id) == after.id:
-        if not after.permissions_for(after.guild.get_member(bot.user.id)).send_messages:
+        if after.is_nsfw() or not after.permissions_for(after.guild.get_member(bot.user.id)).send_messages:
             if after.guild.owner.dm_channel == None:
                 await after.guild.owner.create_dm()
             await after.guild.owner.dm_channel.send(f"The birthday announcement channel in your server **{after.guild.name}** was updated.\n" + \
-            "The update resulted in me not having the permission to send messages to that channel.\n" + \
+            "The update resulted in me not having the permission to send messages to that channel or the channel being marked as NSFW.\n" + \
             "Please set a new announcement channel.")
             update_server(after.guild.id, {"birthday_channel_id" : None})
 
@@ -467,11 +467,13 @@ async def channel(ctx, *args):
     if len(args) == 0:
         return await ctx.send(f"Usage: {bot.command_prefix}channel *channel_mention*")
     elif not ctx.message.author.guild_permissions.administrator:
-        return await ctx.send("You must be an administrator to use this command")
+        return await ctx.send("You must be an administrator to use this command.")
     if is_channel_mention(args[0]):
         ch = ctx.guild.get_channel(int(args[0][2:-1]))
         if ch.is_nsfw():
-            return await ctx.send("Please select a channel without any restrictions (not private or nsfw).")
+            return await ctx.send("Please select a channel which is not marked as NSFW.")
+        elif not ch.permissions_for(ctx.guild.get_member(bot.user.id)).send_messages:
+            return await ctx.send("Please select a channel where I can send messages.")
         update_server(ctx.guild.id, {"birthday_channel_id" : ch.id})
         embed = discord.Embed(title="Birthday Announcement Channel Updated.", description="", color=0xFF0000)
         embed.description += f"New birthday announcement channel - {ch.name}"
