@@ -82,41 +82,78 @@ def is_leap_year(year):
     else:
         return False
 
+def closest_leap_year(year):
+    year += 1
+    while not is_leap_year(year):
+        year += 1
+    return year
+
+def prev_leap_year(year):
+    year -= 1
+    while not is_leap_year(year):
+        year -= 1
+    return year
 
 def user_sort_key(user):
     now = datetime.datetime.now()
     date = user["birth_date"]
     if date.month < now.month:
-        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29:
+            new_date = datetime.datetime(closest_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
     elif date.month == now.month and date.day < now.day:
-        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29:
+            new_date = datetime.datetime(closest_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
     else:
-        new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29 and not is_leap_year(now.year):
+            new_date = datetime.datetime(closest_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
     delta = new_date - now
     return delta.days
 
 def close_birthday(date):
     now = datetime.datetime.now()
     if date.month < now.month:
-        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29:
+            new_date = datetime.datetime(closest_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
     elif date.month == now.month and date.day < now.day:
-        new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29:
+            new_date = datetime.datetime(closest_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year + 1, date.month, date.day, 0, 0, 0)
     else:
-        new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29 and not is_leap_year(now.year):
+            new_date = datetime.datetime(closest_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
     delta = new_date - now
     return delta.days <= 30
 
 def recent_birthday(date):
     now = datetime.datetime.now()
     if date.month > now.month:
-        new_date = datetime.datetime(now.year - 1, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29:
+            new_date = datetime.datetime(prev_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year - 1, date.month, date.day, 0, 0, 0)
     elif date.month == now.month and date.day > now.day:
-        new_date = datetime.datetime(now.year - 1, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29:
+            new_date = datetime.datetime(prev_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year - 1, date.month, date.day, 0, 0, 0)
     else:
-        new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
+        if date.month == 2 and date.day == 29 and not is_leap_year(now.year):
+            new_date = datetime.datetime(prev_leap_year(now.year), date.month, date.day, 0, 0, 0)
+        else:
+            new_date = datetime.datetime(now.year, date.month, date.day, 0, 0, 0)
     delta = now - new_date
     return delta.days <= 30
-         
     
 def check_date(year, month, day):
     if (not 1970 <= year <= datetime.datetime.now().year - 5) or (not 1 <= month <= 12) or (not 1 <= day <= 31):
@@ -291,8 +328,8 @@ async def birthday(ctx, *args):
             embed.set_author(name=str(ctx.author))
             embed.set_thumbnail(url=ctx.author.avatar_url)
 
-            await ctx.send(embed=embed)
             await bot.change_presence(game=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
+            await ctx.send(embed=embed)
         else:
             return await ctx.send("Invalid date.")
     else:
@@ -478,8 +515,6 @@ async def broadcast(ctx, *args):
         except:
             pass
     await ctx.send(f"The message was sent to {count} servers.")
-
-
 
 bot.loop.create_task(announce_birthdays())
 bot.run(config_data["token"])
