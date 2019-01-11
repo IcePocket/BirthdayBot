@@ -1,4 +1,4 @@
-# Birthday-bot
+# BirthdayBot
 <p>
 This is a discord bot that announces birthdays.<br />
 It works with time zones, allows you to see upcoming and recent birthdays in a server, <br />
