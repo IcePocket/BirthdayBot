@@ -188,14 +188,26 @@ help_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Se
 help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}mention", value="Toggles mentioning yourself in your birthday announcements on/off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}everyone", value="Toggles mentioning everyone in birthday announcements in the current server on/off.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}info", value="View general info about the bot.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
 
 dblpy = dbl.Client(bot, config_data["dbl_token"])
+
+def get_announcement_text(mention_user, mention_everyone, member_mention):
+    if mention_user == True and mention_everyone == True:
+        return f"@everyone {member_mention}"
+    elif mention_user == True:
+        return member_mention
+    elif mention_everyone == True:
+        return "@everyone "
+    else:
+        return ""
 
 async def announce_birthdays():
     await bot.wait_until_ready()
@@ -224,6 +236,7 @@ async def announce_birthdays():
                             name = member.name
                             if member.nick is not None:
                                 name = member.nick
+                            text = get_announcement_text(user["mention"], server["mention_everyone"], member.mention)
                             embed = discord.Embed(title=f"Happy Birthday {name}! :tada:", description="", color=0xFF0000)
                             embed.description += f"{calendar.month_name[user_time.month]} {get_number_with_postfix(user_time.day)}"
                             embed.set_thumbnail(url=member.avatar_url)
@@ -231,7 +244,7 @@ async def announce_birthdays():
                             if user["hide_age"] == False:
                                 age = user_time.year - user_birthday.year
                                 embed.title = f"Happy {get_number_with_postfix(age)} Birthday {name}! :tada:"
-                            await channel.send(embed=embed)  
+                            await channel.send(text, embed=embed)  
                         except:
                             pass
 
@@ -253,7 +266,7 @@ async def on_ready():
     help_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
         if not server_exists(guild.id):
-            server_object = {"id" : guild.id, "birthday_channel_id" : None, "user_ids" : []}
+            server_object = {"id" : guild.id, "birthday_channel_id" : None, "mention_everyone" : True, "user_ids" : []}
             insert_server(server_object)
     await dblpy.post_server_count()
     await post_server_count(bot)
@@ -271,7 +284,7 @@ async def on_message(message):
 @bot.event
 async def on_guild_join(guild):
     if not server_exists(guild.id):
-        server_object = {"id": guild.id, "birthday_channel_id": None , "user_ids" : []}
+        server_object = {"id": guild.id, "birthday_channel_id": None, "mention_everyone" : True, "user_ids" : []}
         insert_server(server_object)
         await dblpy.post_server_count()
         await post_server_count(bot)
@@ -319,12 +332,13 @@ async def birthday(ctx, *args):
                 embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
                 return await ctx.send(embed=embed)
                 
-            user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False, "server_ids" : []}
+            user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False, "mention" : True, "server_ids" : []}
             insert_user(user_object)
 
             embed = discord.Embed(title="Birthday Added!", description="", color=0xFF0000)
             embed.description += f"Use `{bot.command_prefix}timezone` to update your time zone.\n"
-            embed.description += f"Type `{bot.command_prefix}hide_age` if you don't want your age to appear in birthday announcements."
+            embed.description += f"Type `{bot.command_prefix}hide_age` if you don't want your age to appear in birthday announcements.\n"
+            embed.description += f"Type `{bot.command_prefix}mention` to toggle mentioning yourself in your birthday announcements on/off."
             embed.set_author(name=str(ctx.author))
             embed.set_thumbnail(url=ctx.author.avatar_url)
 
@@ -371,6 +385,23 @@ async def show_age(ctx):
     update_user(ctx.author.id, {"hide_age" : False})
     embed = discord.Embed(title="Age is now visible.", description="Your age will appear in birthday announcements.", color=0xFF0000)
     embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def mention(ctx):
+    if not user_exists(ctx.author.id):
+        return await ctx.send(f"You must be registered first. Add your birthday with `{bot.command_prefix}birthday`")
+    embed = discord.Embed(title="Mentioning yourself in birthday announcements is now ", description="", color=0xFF0000)
+    embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+    user = get_user_object(ctx.author.id)
+    if user["mention"] == True:
+        embed.title += "**off**."
+        embed.description = "The bot will not mention you in your birthday announcements."
+        update_user(ctx.author.id, {"mention" : False})
+    else:
+        embed.title += "**on**."
+        embed.description = "The bot will mention you in your birthday announcements."
+        update_user(ctx.author.id, {"mention" : True})
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -482,6 +513,26 @@ async def channel(ctx, *args):
         return await ctx.send(embed=embed)
     else:
         await ctx.send("Please mention a channel")
+
+@bot.command()
+async def everyone(ctx):
+    if ctx.guild is None:
+        return await ctx.send("This command is only available in servers.")
+    elif not ctx.message.author.guild_permissions.administrator:
+        return await ctx.send("You must be an administrator to use this command.")
+    embed = discord.Embed(title="Mentioning everyone in birthday announcements is now ", description="", color=0xFF0000)
+    embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+    embed.set_thumbnail(url=bot.user.avatar_url)
+    server = get_server_object(ctx.guild.id)
+    if server["mention_everyone"] == True:
+        embed.title += "**off**."
+        embed.description = "The bot will not mention everyone in birthday announcements."
+        update_server(ctx.guild.id, {"mention_everyone" : False})
+    else:
+        embed.title += "**on**."
+        embed.description = "The bot will mention everyone in birthday announcements."
+        update_server(ctx.guild.id, {"mention_everyone" : True})
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def info(ctx):
