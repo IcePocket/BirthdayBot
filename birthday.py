@@ -557,7 +557,7 @@ async def broadcast(ctx, *args):
     count = 0
     msg = ""
     for arg in args:
-        msg += arg
+        msg += arg + " "
     for server in get_servers_data():
         try:
             guild = discord.utils.get(bot.guilds, id=server["id"])
