@@ -182,20 +182,29 @@ def get_number_with_postfix(num):
 bot = Bot(description="This is a bot whose main purpose is to announce birthdays", command_prefix="~", pm_help = False)
 bot.remove_command('help')
 
-help_embed = discord.Embed(title="Birthday Bot Manual", description="A list of useful commands", color=0xFF0000)
-help_embed.add_field(name=f"{bot.command_prefix}birthday *year* *month* *day*", value="Add or update your birthday.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Set your time zone. Make sure to write it just like it's written on the list.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}mention", value="Toggles mentioning yourself in your birthday announcements on/off.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}everyone", value="Toggles mentioning everyone in birthday announcements in the current server on/off.", inline=False)
+help_embed = discord.Embed(title="BirthdayBot", description="Choose a command list.", color=0xFF0000)
+help_embed.add_field(name=f"{bot.command_prefix}user_commands", value="Commands that are used to modify your own settings.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}server_commands", value="Commands that are used in servers.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}admin_commands", value="Commands that can be used only by server administrators.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}info", value="View general info about the bot.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
+
+user_commands_embed = discord.Embed(title="User Commands", description="Commands that are used to modify your own settings.", color=0xFF0000)
+user_commands_embed.add_field(name=f"{bot.command_prefix}birthday *year* *month* *day*", value="Add or update your birthday.", inline=False)
+user_commands_embed.add_field(name=f"{bot.command_prefix}timezone *time_zone*", value="Set your time zone. Make sure to write it just like it's written on the list.", inline=False)
+user_commands_embed.add_field(name=f"{bot.command_prefix}timezones", value="Get a list of supported time zones.", inline=False)
+user_commands_embed.add_field(name=f"{bot.command_prefix}hide_age", value="Toggles the appearance of your age in the birthday announcement off.", inline=False)
+user_commands_embed.add_field(name=f"{bot.command_prefix}show_age", value="Toggles the appearance of your age in the birthday announcement on.", inline=False)
+user_commands_embed.add_field(name=f"{bot.command_prefix}mention", value="Toggles mentioning yourself in your birthday announcements on/off.", inline=False)
+
+server_commands_embed = discord.Embed(title="Server Commands", description="Commands that are used in servers.", color=0xFF0000)
+server_commands_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server.", inline=False)
+server_commands_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server.", inline=False)
+server_commands_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
+
+admin_commands_embed = discord.Embed(title="Admin Commands", description="Commands that can be used only by server administrators.", color=0xFF0000)
+admin_commands_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
+admin_commands_embed.add_field(name=f"{bot.command_prefix}everyone", value="Toggles mentioning everyone in birthday announcements in the current server on/off.", inline=False)
 
 dblpy = dbl.Client(bot, config_data["dbl_token"])
 
@@ -264,6 +273,9 @@ async def on_ready():
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=335727616'.format(bot.user.id))
     await bot.change_presence(game=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))    
     help_embed.set_thumbnail(url=bot.user.avatar_url)
+    user_commands_embed.set_thumbnail(url=bot.user.avatar_url)
+    server_commands_embed.set_thumbnail(url=bot.user.avatar_url)
+    admin_commands_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
         if not server_exists(guild.id):
             server_object = {"id" : guild.id, "birthday_channel_id" : None, "mention_everyone" : True, "user_ids" : []}
@@ -318,6 +330,18 @@ async def on_guild_remove(guild):
 @bot.command()
 async def help(ctx):
     await ctx.send(embed=help_embed)
+
+@bot.command()
+async def user_commands(ctx):
+    await ctx.send(embed=user_commands_embed)
+
+@bot.command()
+async def server_commands(ctx):
+    await ctx.send(embed=server_commands_embed)
+
+@bot.command()
+async def admin_commands(ctx):
+    await ctx.send(embed=admin_commands_embed)
 
 @bot.command()
 async def birthday(ctx, *args):
@@ -542,6 +566,7 @@ async def info(ctx):
     embed.add_field(name="Servers", value=str(len(bot.guilds)), inline=True)
     embed.add_field(name="Registered Users", value=str(get_users_count()), inline=True)
     embed.add_field(name="Support Server", value="https://discord.gg/u8HNKvr", inline=True)
+    embed.add_field(name="Invite Link", value="https://discordapp.com/oauth2/authorize?client_id=490743434773266432&scope=bot&permissions=335727616", inline=False)
     embed.add_field(name="Credits", value="Arik#8773 - Creator, Discord API developer\nMr Doctor Professor Patrick#7943 - Host, MongoDB developer", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed)
@@ -567,7 +592,7 @@ async def broadcast(ctx, *args):
                 await channel.send("**This is a message from the administrators of BirthdayBot:**\n" + msg)
         except:
             pass
-    await ctx.send(f"The message was sent to {count} servers.")
+    await ctx.send(f"The message was sent.")
 
 bot.loop.create_task(announce_birthdays())
 bot.run(config_data["token"])
