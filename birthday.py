@@ -200,6 +200,7 @@ user_commands_embed.add_field(name=f"{bot.command_prefix}mention", value="Toggle
 server_commands_embed = discord.Embed(title="Server Commands", description="Commands that are used in servers.", color=0xFF0000)
 server_commands_embed.add_field(name=f"{bot.command_prefix}upcoming", value="Check out the upcoming birthdays in the current server.", inline=False)
 server_commands_embed.add_field(name=f"{bot.command_prefix}recent", value="Check out the recent birthdays in the current server.", inline=False)
+server_commands_embed.add_field(name=f"{bot.command_prefix}birthdays *month*", value="See the birthdays in the given month.", inline=False)
 server_commands_embed.add_field(name=f"{bot.command_prefix}stats", value="Show the stats for the current server.", inline=False)
 
 admin_commands_embed = discord.Embed(title="Admin Commands", description="Commands that can be used only by server administrators.", color=0xFF0000)
@@ -271,7 +272,7 @@ async def on_ready():
     print('--------')
     print('Use this link to invite {}:'.format(bot.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=335727616'.format(bot.user.id))
-    await bot.change_presence(game=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))    
+    await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))    
     help_embed.set_thumbnail(url=bot.user.avatar_url)
     user_commands_embed.set_thumbnail(url=bot.user.avatar_url)
     server_commands_embed.set_thumbnail(url=bot.user.avatar_url)
@@ -366,7 +367,7 @@ async def birthday(ctx, *args):
             embed.set_author(name=str(ctx.author))
             embed.set_thumbnail(url=ctx.author.avatar_url)
 
-            await bot.change_presence(game=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
+            await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
             await ctx.send(embed=embed)
         else:
             return await ctx.send("Invalid date.")
@@ -494,6 +495,39 @@ async def recent(ctx):
         embed.add_field(name=f"{name} ({member})", value=f"{calendar.month_name[date.month]} {get_number_with_postfix(date.day)}, {year}", inline=False)
     if len(embed.fields) == 0:
         embed.description = "No recent birthdays."
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def birthdays(ctx, *args):
+    if ctx.guild is None:
+        return await ctx.send("This command is only available in servers.")
+    elif len(args) == 0:
+        return await ctx.send(f"Usage: {bot.command_prefix}birthdays *month*")
+    elif not user_exists(ctx.author.id):
+        return await ctx.send("If you want to see other people's birthdays, you must add your own!")
+    if args[0].title() in list(calendar.month_name):
+        month = list(calendar.month_name).index(args[0].title())
+    elif args[0].isdigit() and 1 <= int(args[0]) <= 12:
+        month = int(args[0])
+    else:
+        return await ctx.send(f"Invalid month: `{args[0]}`")
+    embed = discord.Embed(title=f"{ctx.guild.name} - Birthdays in {calendar.month_name[month]}", description="", color=0xFF0000)
+    embed.set_thumbnail(url=ctx.guild.icon_url)
+    users = []
+    for user in get_users_data():
+        if ctx.guild.get_member(user["id"]) is not None and user["birth_date"].month == month:
+            users.append(user)
+    if len(users) == 0:
+        embed.description = f"No birthdays in {calendar.month_name[month]}"
+        return await ctx.send(embed=embed) 
+    users.sort(key=lambda x : x["birth_date"].day)
+    for user in users:
+        date = user["birth_date"]
+        member = ctx.guild.get_member(user["id"])
+        name = member.name
+        if member.nick is not None:
+            name = member.nick
+        embed.add_field(name=f"{name} ({member})", value=f"{calendar.month_name[month]} {get_number_with_postfix(date.day)}", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
