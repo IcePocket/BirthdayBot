@@ -618,7 +618,7 @@ async def broadcast(ctx, *args):
     msg = " ".join(args)
     embed = discord.Embed(title="Official Administrator Announcement", description=msg, color=0xFF0000)
     embed.set_thumbnail(url=bot.user.avatar_url)
-    embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
     for server in get_servers_data():
         try:
             guild = discord.utils.get(bot.guilds, id=server["id"])
