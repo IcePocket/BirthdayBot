@@ -353,7 +353,7 @@ async def birthday(ctx, *args):
         if check_date(year, month, day):
             if user_exists(ctx.author.id):
                 update_user(ctx.author.id, {"birth_date" : datetime.datetime(year, month, day, 0, 0, 0)})
-                embed = discord.Embed(title="Birth Date Updated.", color=0xFF0000)
+                embed = discord.Embed(title="Birth date updated.", color=0xFF0000)
                 embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
                 return await ctx.send(embed=embed)
                 
@@ -361,7 +361,7 @@ async def birthday(ctx, *args):
             insert_user(user_object)
 
             embed = discord.Embed(title="Birthday Added!", description="", color=0xFF0000)
-            embed.description += f"Use `{bot.command_prefix}timezone` to update your time zone.\n"
+            embed.description += f"Use `{bot.command_prefix}timezone` to update your time zone. The default time zone is UTC.\n"
             embed.description += f"Type `{bot.command_prefix}hide_age` if you don't want your age to appear in birthday announcements.\n"
             embed.description += f"Type `{bot.command_prefix}mention` to toggle mentioning yourself in your birthday announcements on/off."
             embed.set_author(name=str(ctx.author))
@@ -383,7 +383,7 @@ async def timezone(ctx, *args):
     try:
         pytz.timezone(args[0])
         update_user(ctx.author.id, {"time_zone" : args[0]})
-        embed = discord.Embed(title="Time Zone Updated.", description=f"Your new time zone - {args[0]}", color=0xFF0000)
+        embed = discord.Embed(title="Time zone updated.", description=f"Your new time zone - {args[0]}", color=0xFF0000)
         embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
         return await ctx.send(embed=embed)
     except:
@@ -434,7 +434,7 @@ async def upcoming(ctx):
     if ctx.guild is None:
         return await ctx.send("This command is only available in servers.")
     elif not user_exists(ctx.author.id):
-        return await ctx.send("If you want to see other people's birthdays, you must add your own!")
+        return await ctx.send(f"If you want to see other people's birthdays, you must add your own! Type `{bot.command_prefix}birthday`")
     embed = discord.Embed(title=f"Upcoming birthdays in {ctx.guild.name}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
     users = []
@@ -468,7 +468,7 @@ async def recent(ctx):
     if ctx.guild is None:
         return await ctx.send("This command is only available in servers.")
     elif not user_exists(ctx.author.id):
-        return await ctx.send("If you want to see other people's birthdays, you must add your own!")
+        return await ctx.send(f"If you want to see other people's birthdays, you must add your own! Type `{bot.command_prefix}birthday`")
     embed = discord.Embed(title=f"Recent birthdays in {ctx.guild.name}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
     users = []
@@ -504,7 +504,7 @@ async def birthdays(ctx, *args):
     elif len(args) == 0:
         return await ctx.send(f"Usage: {bot.command_prefix}birthdays *month*")
     elif not user_exists(ctx.author.id):
-        return await ctx.send("If you want to see other people's birthdays, you must add your own!")
+        return await ctx.send(f"If you want to see other people's birthdays, you must add your own! Type `{bot.command_prefix}birthday`")
     if args[0].title() in list(calendar.month_name):
         month = list(calendar.month_name).index(args[0].title())
     elif args[0].isdigit() and 1 <= int(args[0]) <= 12:
@@ -544,8 +544,10 @@ async def stats(ctx):
     channel_name = "N/A"
     if bday_channel is not None:
         channel_name = bday_channel.name
+    mention_everyone = server["mention_everyone"]
     stats_embed.add_field(name="Birthday Count", value=str(birthday_count), inline=False)
     stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
+    stats_embed.add_field(name="Mention Everyone", value=str(mention_everyone), inline=False)
     stats_embed.set_thumbnail(url=ctx.guild.icon_url)
     await ctx.send(embed=stats_embed)
 
