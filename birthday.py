@@ -538,8 +538,8 @@ async def stats(ctx):
     stats_embed = discord.Embed(title=f"{ctx.guild.name} - Stats", color=0xFF0000)
     async with ctx.typing():
         birthday_count = 0
-        for member in ctx.guild.members:
-            if user_exists(member.id):
+        for user in get_users_data():
+            if ctx.guild.get_member(user["id"]) is not None:
                 birthday_count += 1
         bday_channel = ctx.guild.get_channel(server["birthday_channel_id"])
         channel_name = "N/A"
