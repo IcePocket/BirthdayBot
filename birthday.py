@@ -550,7 +550,7 @@ async def stats(ctx):
         stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
         stats_embed.add_field(name="Mention Everyone", value=str(mention_everyone), inline=False)
         stats_embed.set_thumbnail(url=ctx.guild.icon_url)
-        await ctx.send(embed=stats_embed)
+    await ctx.send(embed=stats_embed)
 
 @bot.command()
 async def channel(ctx, *args):
