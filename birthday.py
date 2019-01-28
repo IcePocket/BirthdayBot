@@ -535,21 +535,22 @@ async def stats(ctx):
     if ctx.guild is None:
         return await ctx.send("This command is only available in servers.")
     server = get_server_object(ctx.guild.id)
-    stats_embed = discord.Embed(title=f"Stats for {ctx.guild.name}", color=0xFF0000)
-    birthday_count = 0
-    for member in ctx.guild.members:
-        if user_exists(member.id):
-            birthday_count += 1
-    bday_channel = ctx.guild.get_channel(server["birthday_channel_id"])
-    channel_name = "N/A"
-    if bday_channel is not None:
-        channel_name = bday_channel.name
-    mention_everyone = server["mention_everyone"]
-    stats_embed.add_field(name="Birthday Count", value=str(birthday_count), inline=False)
-    stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
-    stats_embed.add_field(name="Mention Everyone", value=str(mention_everyone), inline=False)
-    stats_embed.set_thumbnail(url=ctx.guild.icon_url)
-    await ctx.send(embed=stats_embed)
+    stats_embed = discord.Embed(title=f"{ctx.guild.name} - Stats", color=0xFF0000)
+    async with ctx.typing():
+        birthday_count = 0
+        for member in ctx.guild.members:
+            if user_exists(member.id):
+                birthday_count += 1
+        bday_channel = ctx.guild.get_channel(server["birthday_channel_id"])
+        channel_name = "N/A"
+        if bday_channel is not None:
+            channel_name = bday_channel.name
+        mention_everyone = server["mention_everyone"]
+        stats_embed.add_field(name="Birthday Count", value=str(birthday_count), inline=False)
+        stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
+        stats_embed.add_field(name="Mention Everyone", value=str(mention_everyone), inline=False)
+        stats_embed.set_thumbnail(url=ctx.guild.icon_url)
+        await ctx.send(embed=stats_embed)
 
 @bot.command()
 async def channel(ctx, *args):
