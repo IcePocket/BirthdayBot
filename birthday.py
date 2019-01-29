@@ -186,7 +186,7 @@ help_embed = discord.Embed(title="BirthdayBot", description="Choose a command li
 help_embed.add_field(name=f"{bot.command_prefix}user_commands", value="Commands that are used to modify your own settings.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}server_commands", value="Commands that are used in servers.", inline=False)
 help_embed.add_field(name=f"{bot.command_prefix}admin_commands", value="Commands that can be used only by server administrators.", inline=False)
-help_embed.add_field(name=f"{bot.command_prefix}info", value="View general info about the bot.", inline=False)
+help_embed.add_field(name=f"{bot.command_prefix}other", value="Other helpful commands.", inline=False)
 help_embed.set_footer(text="For support: https://discord.gg/u8HNKvr")
 
 user_commands_embed = discord.Embed(title="User Commands", description="Commands that are used to modify your own settings.", color=0xFF0000)
@@ -206,6 +206,10 @@ server_commands_embed.add_field(name=f"{bot.command_prefix}stats", value="Show t
 admin_commands_embed = discord.Embed(title="Admin Commands", description="Commands that can be used only by server administrators.", color=0xFF0000)
 admin_commands_embed.add_field(name=f"{bot.command_prefix}channel *channel_mention*", value="Set the channel in which the birthdays will be announced.", inline=False)
 admin_commands_embed.add_field(name=f"{bot.command_prefix}everyone", value="Toggles mentioning everyone in birthday announcements in the current server on/off.", inline=False)
+
+other_commands_embed = discord.Embed(title="Miscellaneous Commands", description="Other helpful commands.", color=0xFF0000)
+other_commands_embed.add_field(name=f"{bot.command_prefix}vote", value="Display a list of websites where you can show your love and upvote the bot.", inline=False)
+other_commands_embed.add_field(name=f"{bot.command_prefix}info", value="View general info about the bot.", inline=False)
 
 dblpy = dbl.Client(bot, config_data["dbl_token"])
 
@@ -343,6 +347,10 @@ async def server_commands(ctx):
 @bot.command()
 async def admin_commands(ctx):
     await ctx.send(embed=admin_commands_embed)
+
+@bot.command()
+async def other(ctx):
+    await ctx.send(embed=other_commands_embed)
 
 @bot.command()
 async def birthday(ctx, *args):
@@ -593,6 +601,14 @@ async def everyone(ctx):
         embed.title += "**on**."
         embed.description = "The bot will mention everyone in birthday announcements."
         update_server(ctx.guild.id, {"mention_everyone" : True})
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def vote(ctx):
+    embed = discord.Embed(title="Vote For The Bot", description="A list of websites where you can show your love and upvote the bot :)", color=0xFF0000)
+    embed.add_field(name="Discord Bot List", value="https://discordbots.org/bot/490743434773266432", inline=False)
+    embed.add_field(name="Bots For Discord", value="https://botsfordiscord.com/bot/490743434773266432", inline=False)
+    embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed)
 
 @bot.command()
