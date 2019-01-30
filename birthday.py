@@ -281,6 +281,7 @@ async def on_ready():
     user_commands_embed.set_thumbnail(url=bot.user.avatar_url)
     server_commands_embed.set_thumbnail(url=bot.user.avatar_url)
     admin_commands_embed.set_thumbnail(url=bot.user.avatar_url)
+    other_commands_embed.set_thumbnail(url=bot.user.avatar_url)
     for guild in bot.guilds:
         if not server_exists(guild.id):
             server_object = {"id" : guild.id, "birthday_channel_id" : None, "mention_everyone" : True, "user_ids" : []}
@@ -526,7 +527,7 @@ async def birthdays(ctx, *args):
         if ctx.guild.get_member(user["id"]) is not None and user["birth_date"].month == month:
             users.append(user)
     if len(users) == 0:
-        embed.description = f"No birthdays in {calendar.month_name[month]}"
+        embed.description = f"No birthdays in {calendar.month_name[month]}."
         return await ctx.send(embed=embed) 
     users.sort(key=lambda x : x["birth_date"].day)
     for user in users:
