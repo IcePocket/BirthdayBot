@@ -446,6 +446,7 @@ async def upcoming(ctx):
         return await ctx.send(f"If you want to see other people's birthdays, you must add your own! Type `{bot.command_prefix}birthday`")
     embed = discord.Embed(title=f"Upcoming birthdays in {ctx.guild.name}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
+    embed.set_footer(text=f"Requested by {ctx.author}")
     users = []
     for user in get_users_data():
         if ctx.guild.get_member(user["id"]) is not None:
@@ -480,6 +481,7 @@ async def recent(ctx):
         return await ctx.send(f"If you want to see other people's birthdays, you must add your own! Type `{bot.command_prefix}birthday`")
     embed = discord.Embed(title=f"Recent birthdays in {ctx.guild.name}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
+    embed.set_footer(text=f"Requested by {ctx.author}")
     users = []
     for user in get_users_data():
         if ctx.guild.get_member(user["id"]) is not None:
@@ -522,6 +524,7 @@ async def birthdays(ctx, *args):
         return await ctx.send(f"Invalid month: `{args[0]}`")
     embed = discord.Embed(title=f"{ctx.guild.name} - Birthdays in {calendar.month_name[month]}", description="", color=0xFF0000)
     embed.set_thumbnail(url=ctx.guild.icon_url)
+    embed.set_footer(text=f"Requested by {ctx.author}")
     users = []
     for user in get_users_data():
         if ctx.guild.get_member(user["id"]) is not None and user["birth_date"].month == month:
@@ -559,6 +562,7 @@ async def stats(ctx):
         stats_embed.add_field(name="Birthday Announcement Channel", value=channel_name, inline=False)
         stats_embed.add_field(name="Mention Everyone", value=str(mention_everyone), inline=False)
         stats_embed.set_thumbnail(url=ctx.guild.icon_url)
+        stats_embed.set_footer(text=f"Requested by {ctx.author}")
     await ctx.send(embed=stats_embed)
 
 @bot.command()
@@ -580,6 +584,7 @@ async def channel(ctx, *args):
         embed.description += f"New birthday announcement channel - {ch.name}"
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
         embed.set_thumbnail(url=bot.user.avatar_url)
+        embed.set_footer(text=f"Modified by {ctx.author}")
         return await ctx.send(embed=embed)
     else:
         await ctx.send("Please mention a channel")
@@ -593,6 +598,7 @@ async def everyone(ctx):
     embed = discord.Embed(title="Mentioning everyone in birthday announcements is now ", description="", color=0xFF0000)
     embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
     embed.set_thumbnail(url=bot.user.avatar_url)
+    embed.set_footer(text=f"Modified by {ctx.author}")
     server = get_server_object(ctx.guild.id)
     if server["mention_everyone"] == True:
         embed.title += "**off**."
@@ -610,6 +616,7 @@ async def vote(ctx):
     embed.add_field(name="Discord Bot List", value="https://discordbots.org/bot/490743434773266432", inline=False)
     embed.add_field(name="Bots For Discord", value="https://botsfordiscord.com/bot/490743434773266432", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
+    embed.set_footer(text=f"Requested by {ctx.author}")
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -623,6 +630,7 @@ async def info(ctx):
     embed.add_field(name="Invite Link", value="https://discordapp.com/oauth2/authorize?client_id=490743434773266432&scope=bot&permissions=335727616", inline=False)
     embed.add_field(name="Credits", value="Arik#8773 - Creator, Discord API developer\nMr Doctor Professor Patrick#7943 - Host, MongoDB developer", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
+    embed.set_footer(text=f"Requested by {ctx.author}")
     await ctx.send(embed=embed)
 
 @bot.command()
