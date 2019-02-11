@@ -366,6 +366,7 @@ async def birthday(ctx, *args):
                 embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
                 return await ctx.send(embed=embed)
                 
+            birthday_count = get_users_count()
             user_object = {"id" : ctx.author.id, "birth_date" : datetime.datetime(year, month, day, 0, 0, 0), "time_zone" : "UTC", "hide_age" : False, "mention" : True, "server_ids" : []}
             insert_user(user_object)
 
@@ -376,8 +377,15 @@ async def birthday(ctx, *args):
             embed.set_author(name=str(ctx.author))
             embed.set_thumbnail(url=ctx.author.avatar_url)
 
-            await bot.change_presence(activity=discord.Game(name=f"{get_users_count()} birthdays | type {bot.command_prefix}help"))
+            await bot.change_presence(activity=discord.Game(name=f"{birthday_count} birthdays | type {bot.command_prefix}help"))
             await ctx.send(embed=embed)
+            if birthday_count == 1000:
+                print(f"User: {ctx.author}\nServer: {ctx.guild.name}")
+                tmp_embed = discord.Embed(title=f"Congratulations {ctx.author}! :tada:", description="", color=0xFF0000)
+                tmp_embed.set_author(name="Developers of BirthdayBot")
+                tmp_embed.set_thumbnail(url=ctx.author.avatar_url)
+                tmp_embed.description += "You are the 1000th user who added his birthday to the bot! Please take a screenshot of this message and post it in our support server, thank you!\nhttps://discord.gg/u8HNKvr"
+                await ctx.send(embed=tmp_embed)
         else:
             return await ctx.send("Invalid date.")
     else:
