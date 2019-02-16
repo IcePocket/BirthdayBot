@@ -382,7 +382,6 @@ async def birthday(ctx, *args):
             if birthday_count % 100 == 0:
                 print(f"User: {ctx.author}\nServer: {ctx.guild.name}")
                 tmp_embed = discord.Embed(title=f"Congratulations {ctx.author}! :tada:", description="", color=0xFF0000)
-                tmp_embed.set_author(name="Developers of BirthdayBot")
                 tmp_embed.set_thumbnail(url=ctx.author.avatar_url)
                 tmp_embed.description += f"You are the {birthday_count}th user who added his birthday to the bot! Please take a screenshot of this message and post it in our support server, thank you!\nhttps://discord.gg/u8HNKvr"
                 await ctx.send(embed=tmp_embed)
