@@ -1,0 +1,91 @@
+{
+    "birthday" : {
+        "title" : "Command: birthday",
+        "description" : "Add or update your birthday.",
+        "fields" : [
+            {
+                "name" : "Proper Usage",
+                "value" : "<PREFIX>birthday <year> <month> <day>",
+                "inline" : false
+            },
+            {
+                "name" : "Examples",
+                "value" : "<PREFIX>birthday 1995 1 31\n<PREFIX>birthday 2000 2 29",
+                "inline" : false
+            },
+            {
+                "name" : "Notes",
+                "value" : "* The parameters (year, month, day) must be **numbers**.\n* The earliest acceptable year is 1940.",
+                "inline" : false
+            }
+        ]
+    },
+    "timezone" : {
+        "title" : "Command: timezone",
+        "description" : "Set your time zone.",
+        "fields" : [
+            {
+                "name" : "Proper Usage",
+                "value" : "<PREFIX>timezone <zone>",
+                "inline" : false
+            },
+            {
+                "name" : "What kind of time zones do we use?",
+                "value" : "We use Python's Pytz library. The advantage of using it is that the library takes care of everything, including cases where countries change their offset from GMT in the Summer/Winter, and countries whose offset from GMT is not a whole number. The time zones in this library are based on locations, and the format **Continent/Capital** works for **most** of them.",
+                "inline" : false
+            },
+            {
+                "name" : "Examples",
+                "value" : "<PREFIX>timezone America/New_York\n<PREFIX>timezone America/Chicago\n<PREFIX>timezone America/Los_Angeles\n<PREFIX>timezone Asia/Jerusalem\n<PREFIX>timezone Asia/Shanghai\n<PREFIX>timezone Asia/Tokyo\n<PREFIX>timezone Europe/London\n<PREFIX>timezone Europe/Paris\n<PREFIX>timezone Europe/Moscow",
+                "inline" : false
+            },
+            {
+                "name" : "Notes",
+                "value" : "* The time zones are **case-sensitive**, pay attention to upper/lower case letters.",
+                "inline" : false
+            }
+        ]
+    },
+    "birthdays" : {
+        "title" : "Command: birthdays",
+        "description" : "See the server's birthdays in the given month.",
+        "fields" : [
+            {
+                "name" : "Proper Usage",
+                "value" : "<PREFIX>birthdays <month>",
+                "inline" : false
+            },
+            {
+                "name" : "Examples",
+                "value" : "<PREFIX>birthdays January\n<PREFIX>birthdays 4",
+                "inline" : false
+            },
+            {
+                "name" : "Notes",
+                "value" : "* You can use both numbers and names for the month parameter.\n* The month is case-insensitive.",
+                "inline" : false
+            }
+        ]
+    },
+    "channel" : {
+        "title" : "Command: channel",
+        "description" : "Set the server's birthday announcement channel.",
+        "fields" : [
+            {
+                "name" : "Proper Usage",
+                "value" : "<PREFIX>channel #channel",
+                "inline" : false
+            },
+            {
+                "name" : "Examples",
+                "value" : "<PREFIX>channel #general\n<PREFIX>channel #birthdays",
+                "inline" : false
+            },
+            {
+                "name" : "Notes",
+                "value" : "* The parameter should have a blue color after the message has been sent.\n* The bot does not accept NSFW channels or channels where it doesn't have the permission to send messages.\n* This command can only be used in servers, and only by server administrators.",
+                "inline" : false
+            }
+        ]
+    }
+}

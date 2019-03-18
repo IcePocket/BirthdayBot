@@ -1,0 +1,233 @@
+{
+    "help" : {
+        "title" : "BirthdayBot's Guide",
+        "description" : "Choose a command list or join the [support server](<SUPPORT LINK>) for support.",
+        "fields" : [
+            {
+                "name" : "<PREFIX>user_commands",
+                "value" : "Commands that are used to modify your own settings.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>server_commands",
+                "value" : "Commands that are used in servers.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>admin_commands",
+                "value" : "Commands that can be used only by server administrators.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>other",
+                "value" : "Special commands.",
+                "inline" : false
+            }
+        ]
+    },
+    "user_commands" : {
+        "title" : "User Commands",
+        "description" : "Commands that are used to modify your own settings.",
+        "fields" : [
+            {
+                "name" : "<PREFIX>birthday <year> <month> <day>",
+                "value" : "Add or update your birthday.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>timezone <zone>",
+                "value" : "Set your time zone. The format '<Continent>/<Capital>' usually works. Be sure to check out the list of supported time zones.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>hide_age",
+                "value" : "Make your age hidden so it won't appear in birthday announcements.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>show_age",
+                "value" : "Make your age visible so it will appear in birthday announcements.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>mention",
+                "value" : "Toggle your own mention in birthday announcements on/off.",
+                "inline" : false
+            }
+        ]
+    },
+    "server_commands" : {
+        "title" : "Server Commands",
+        "description" : "Commands that are used in servers.",
+        "fields" : [
+            {
+                "name" : "<PREFIX>today",
+                "value" : "See who has birthday today in the server.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>upcoming",
+                "value" : "See who has birthday in the server up to 30 days from now.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>recent",
+                "value" : "See who had birthday in the server up to 30 days ago.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>birthdays <month>",
+                "value" : "See the server's birthdays in the given month.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>stats",
+                "value" : "Get the statistics of the server.",
+                "inline" : false
+            }
+        ]
+    },
+    "admin_commands" : {
+        "title" : "Admin Commands",
+        "description" : "Commands that can be used only by server administrators.",
+        "fields" : [
+            {
+                "name" : "<PREFIX>channel #channel",
+                "value" : "Set the server's birthday announcement channel.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>everyone",
+                "value" : "Toggle mentioning everyone in birthday announcements on/off.",
+                "inline" : false
+            }
+        ]
+    },
+    "other_commands" : {
+        "title" : "Special Commands",
+        "description" : "",
+        "fields" : [
+            {
+                "name" : "<PREFIX>timezones",
+                "value" : "Get a list of supported time zones.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>vote",
+                "value" : "Display a list of websites where you can upvote the bot.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>support",
+                "value" : "Display information about getting support with the bot.",
+                "inline" : false
+            },
+            {
+                "name" : "<PREFIX>info",
+                "value" : "View general information about the bot.",
+                "inline" : false
+            }
+        ]
+    },
+    "birthday_added" : {
+        "title" : "Birthday added!",
+        "description" : "Your registration was successful.",
+        "fields" : [
+            {
+                "name" : "Notes",
+                "value" : "* Your time zone is set to **UTC** by default, you can change it with the `timezone` command.\n* Your age will be visible in birthday announcements, you can hide it with the `hide_age` command.\n* Mentioning yourself in your birthday announcements is **on** by default, you can toggle this setting with the `mention` command.\n* To use commands, write the bot's default prefix or mention the bot before the name of the command.",
+                "inline" : false
+            }
+        ]
+    },
+    "birthday_updated" : {
+        "title" : "Birthday updated.",
+        "description" : "",
+        "fields" : []
+    },
+    "timezone_updated" : {
+        "title" : "Time zone updated.",
+        "description" : "",
+        "fields" : []
+    },
+    "invalid_date" : {
+        "title" : "Invalid Date",
+        "description" : "The given date is not valid.",
+        "fields" : [
+            {
+                "name" : "Possible Causes",
+                "value" : "* One or more of the parameters are not numbers.\n* The month or the day are out of range.\n* The year is not a leap year, yet the date is February 29th.\n* The given year is earlier than 1940.",
+                "inline" : false
+            }
+        ]
+    },
+    "invalid_timezone" : {
+        "title" : "Invalid Time Zone",
+        "description" : "The given time zone is not supported.",
+        "fields" : [
+            {
+                "name" : "Possible Causes",
+                "value" : "* You tried to input your country's offset from GMT.\n* You are not aware of the fact that the time zone names are **case-sensitive**. They need to be written just like in the time zone list.",
+                "inline" : false
+            },
+            {
+                "name" : "Hints",
+                "value" : "* Type `<PREFIX>help timezone`.\n* Type `<PREFIX>timezones`.\n* Try to use the format **<Continent>/<Capital>**.",
+                "inline" : false
+            }
+        ]
+    },
+    "timezones" : {
+        "title" : "Supported Time Zones",
+        "description" : "The supported time zones are from the Pytz library.",
+        "fields" : [
+            {
+                "name" : "A list of Pytz time zones can be found here:",
+                "value" : "<TIMEZONES LINK>",
+                "inline" : false
+            }
+        ]
+    },
+    "age_hidden" : {
+        "title" : "Age is now hidden.",
+        "description" : "Your age will not appear in birthday announcements.\nTo undo this action, type `<PREFIX>show_age`.",
+        "fields" : []
+    },
+    "age_visible" : {
+        "title" : "Age is now visible.",
+        "description" : "Your age will appear in birthday announcements.",
+        "fields" : []
+    },
+    "vote" : {
+        "title" : "Vote For The Bot",
+        "description" : "Websites where you can show your love and upvote the bot :)",
+        "fields" : [
+            {
+                "name" : "Discord Bot List",
+                "value" : "https://discordbots.org/bot/490743434773266432",
+                "inline" : false
+            },
+            {
+                "name" : "Bots For Discord",
+                "value" : "https://botsfordiscord.com/bot/490743434773266432",
+                "inline" : false
+            }
+        ]
+    },
+    "support" : {
+        "title" : "Support Information",
+        "description" : "",
+        "fields" : [
+            {
+                "name" : "Getting the documentation of a command (if there are parameters)",
+                "value" : "<PREFIX>help <command>",
+                "inline" : false
+            },
+            {
+                "name" : "Support Server",
+                "value" : "https://discord.gg/EDMHFDa",
+                "inline" : false
+            }
+        ]
+    }
+}
