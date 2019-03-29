@@ -1,19 +1,21 @@
-import discord
 import asyncio
+from datetime import datetime
+
+import discord
+import pytz
+from discord.ext import commands
+from discord.ext.commands import Bot
+
 import config
 import database
 import embeds
 import utils
 import validators
-import pytz
-from datetime import datetime
-from discord.ext.commands import Bot
-from discord.ext import commands
 
 bot = Bot(command_prefix=config.prefix(), pm_help = False)
 bot.remove_command('help')
 
-async def announce_birthdays():
+async def birthday_operations():
     await bot.wait_until_ready()
 
     while True:
@@ -31,24 +33,9 @@ async def announce_birthdays():
 
         for user in database.get_all_users():
             time = user.local_time()
-
             if time.hour == 0 and time.minute == 0 and user.has_birthday():
                 for server in database.get_all_server_objects():
-                    guild = discord.utils.get(bot.guilds, id=server['id'])
-
-                    if guild is None:
-                        continue
-
-                    channel = guild.get_channel(server['birthday_channel_id'] or 0)
-                    member = guild.get_member(user.id)
-
-                    if member is not None and channel is not None:
-                        try:
-                            embed = embeds.birthday_announcement(user, member)
-                            text = utils.get_announcement_text(server['mention_everyone'], user.is_mentioned, member.mention)
-                            await channel.send(text, embed=embed)  
-                        except:
-                            print(f'Sending announcement to server {guild.name} (id: {guild.id}) failed')
+                    await utils.announce_birthday(user, bot, server)
 
 @bot.event
 async def on_ready():
@@ -459,5 +446,5 @@ async def broadcast(ctx, *args):
             pass
     await ctx.send(f"The message was sent.")
 
-bot.loop.create_task(announce_birthdays())
+bot.loop.create_task(birthday_operations())
 bot.run(config.token())

@@ -22,7 +22,7 @@ documentation_data = documentation_data.replace('<PREFIX>', config.prefix())
 documentation_embeds = json.loads(documentation_data)
 
 # Returns the embed according to the given name
-def get_embed(name, color=None): # Returns a discord.Embed object with data from embeds.json according to the given name
+def get_embed(name, color=discord.Embed.Empty): # Returns a discord.Embed object with data from embeds.json according to the given name
     if name not in embeds:
         return None
 
@@ -154,7 +154,7 @@ def stats(bot, server, guild):
     embed.add_field(name='Birthday Count', value=f'{server.birthday_count()} ({percentage}%)')
 
     embed.add_field(name='Most Birthdays In', value=(server.month_with_most_birthdays() or 'N/A'))
-    embed.add_field(name='Average Age', value=('%.1f' % (server.avg_age()) or 'N/A'))
+    embed.add_field(name='Average Age', value=('%.1f' % (server.avg_age())))
 
     bot_member_object = guild.get_member(bot.user.id)
     date = str(bot_member_object.joined_at)
@@ -163,7 +163,7 @@ def stats(bot, server, guild):
     embed.add_field(name='Mention Everyone', value=str(server.everyone_mentioned))
 
     announcement_channel = guild.get_channel(server.bday_channel_id)
-    embed.add_field(name='Announcement Channel', value=(str(announcement_channel) or 'N/A')) 
+    embed.add_field(name='Announcement Channel', value=str(announcement_channel)) 
 
     return embed
 

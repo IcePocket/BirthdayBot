@@ -2,6 +2,7 @@ import discord
 import requests
 import validators
 import config
+import embeds
 import json
 import platform
 import datetime
@@ -107,6 +108,14 @@ def convert_to_command(s, bot_mention):
         if len(s) > 1 and s[1] == ' ':
             s = s.replace(' ', '', 1)
     return s
+
+def get_user(user_id, bot, guild):
+    user = guild.get_member(user_id)
+
+    if user is None:
+        user = discord.utils.get(bot.get_all_members(), id=user_id)
+
+    return user
  
 # Posts the bot's server count to every website it's listed on
 async def post_server_count(bot):
@@ -114,13 +123,30 @@ async def post_server_count(bot):
     dbl_url = f'https://discordbots.org/api/bots/{bot.user.id}/stats'
     dbl_headers = {'Authorization' : config.dbl_token()}
     dbl_data = {'server_count' : len(bot.guilds)}
-    requests.post(dbl_url, headers=dbl_headers, data=json.dumps(dbl_data))
+    requests.post(dbl_url, headers=dbl_headers, json=dbl_data)
 
     # Posting to Bots For Discord
     bfd_url = f'https://botsfordiscord.com/api/bot/{bot.user.id}'
     bfd_headers = {'Content-Type' : 'application/json', 'Authorization' : config.bfd_token()}
     bfd_data = {'server_count' : len(bot.guilds)}
     requests.post(url=bfd_url, headers=bfd_headers, data=json.dumps(bfd_data))
+
+async def announce_birthday(user, bot, server):
+    guild = discord.utils.get(bot.guilds, id=server['id'])
+
+    if guild is None:
+        return
+
+    channel = guild.get_channel(server['birthday_channel_id'] or 0)
+    member = guild.get_member(user.id)
+
+    if channel is not None and member is not None:
+        try:
+            embed = embeds.birthday_announcement(user, member)
+            text = get_announcement_text(server['mention_everyone'], user.is_mentioned, member.mention)
+            await channel.send(text, embed=embed)
+        except:
+            print(f'An error occured while announcing in server {guild.name} (id: {guild.id})')
 
 def time_until(date):
     now = datetime.now(tz=date.tzinfo)
