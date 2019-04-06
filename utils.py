@@ -6,9 +6,9 @@ import embeds
 import json
 import platform
 import datetime
+import re
 from datetime import datetime, timedelta
 from calendar import month_name
-from re import search
 from os import system
 
 # Utility functions
@@ -31,6 +31,11 @@ def clear_screen():
         system('cls')
     else:
         raise Exception('Function "clear_screen" works only on Linux/Windows')
+
+def remove_html(html_string):
+    html_string = html_string.replace('<br>', '\n')
+    clean_text = re.sub('<.*?>', '', html_string)
+    return clean_text
 
 # Returns the closest leap year to the given year (including the given year)
 def closest_leap_year(year):
@@ -147,6 +152,13 @@ async def announce_birthday(user, bot, server):
             await channel.send(text, embed=embed)
         except:
             print(f'An error occured while announcing in server {guild.name} (id: {guild.id})')
+
+async def get_random_birthday_wish():
+    r = requests.get(config.birthday_wishes_url())
+    html = bytes.decode(r.content)
+    text = remove_html(html)
+    wish = text[:text.rfind('\n')]
+    return wish
 
 def time_until(date):
     now = datetime.now(tz=date.tzinfo)

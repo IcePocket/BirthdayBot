@@ -50,3 +50,6 @@ def support_link():
 
 def special_link():
     return config_data['special_link']
+
+def birthday_wishes_url():
+    return config_data['birthday_wishes_url']
