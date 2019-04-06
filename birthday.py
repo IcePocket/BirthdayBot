@@ -66,7 +66,7 @@ async def on_guild_join(guild):
 @bot.event
 async def on_guild_channel_delete(channel):
     if channel.id == database.get_birthday_channel_id(channel.guild.id):
-        if channel.guild.owner.dm_channel == None:
+        if channel.guild.owner.dm_channel is None:
             await channel.guild.owner.create_dm()
         embed = embeds.birthday_channel_deleted(channel.guild.name)
         await channel.guild.owner.dm_channel.send(embed=embed)
@@ -76,7 +76,7 @@ async def on_guild_channel_delete(channel):
 async def on_guild_channel_update(before, after):
     if database.get_birthday_channel_id(after.guild.id) == after.id:
         if after.is_nsfw() or not after.permissions_for(after.guild.get_member(bot.user.id)).send_messages:
-            if after.guild.owner.dm_channel == None:
+            if after.guild.owner.dm_channel is None:
                 await after.guild.owner.create_dm()
             embed = embeds.birthday_channel_updated(after.guild.name, after.name)
             await after.guild.owner.dm_channel.send(embed=embed)
@@ -323,10 +323,15 @@ async def birthdays(ctx, *args):
         embed.set_footer(text=f'Sent to {ctx.author}', icon_url=ctx.author.avatar_url)
         return await ctx.send(embed=embed)
     elif len(args) == 0:
-        embed = embeds.get_documentation('birthdays')
-        embed.set_thumbnail(url=bot.user.avatar_url)
-        embed.set_footer(text=f'Sent to {ctx.author}', icon_url=ctx.author.avatar_url)
-        return await ctx.send(embed=embed)
+        async with ctx.typing():
+            server = database.get_server(ctx.guild)
+            embed = embeds.birthday_list(server.users, ctx.guild)
+        if embed is None:
+            return await ctx.send(f'{ctx.author.mention} The list is too long and cannot be displayed.')
+        if ctx.author.dm_channel is None:
+            await ctx.author.create_dm()
+        await ctx.author.dm_channel.send(embed=embed)
+        return await ctx.send(f'{ctx.author.mention} Check your direct messages.')
 
     month = utils.convert_month_to_number(args[0])
 
@@ -360,7 +365,7 @@ async def channel(ctx, *args):
     if ctx.guild is None:
         return await ctx.send('This command is only available in servers.')
     elif not ctx.message.author.guild_permissions.administrator:
-        return await ctx.send('You must be an administrator to use this command.')
+        return await ctx.send(f'{ctx.author.mention} You must be an administrator to use this command.')
     elif len(args) == 0 or not validators.channel_mention(args[0]):
         embed = embeds.get_documentation('channel')
         embed.set_thumbnail(url=bot.user.avatar_url)
@@ -388,7 +393,7 @@ async def everyone(ctx):
     if ctx.guild is None:
         return await ctx.send('This command is only available in servers.')
     elif not ctx.message.author.guild_permissions.administrator:
-        return await ctx.send('You must be an administrator to use this command.')
+        return await ctx.send(f'{ctx.author.mention} You must be an administrator to use this command.')
 
     embed = embeds.everyone_toggle(database.toggle_everyone(ctx.guild.id))
     embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)

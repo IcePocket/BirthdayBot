@@ -76,8 +76,8 @@
                 "inline" : false
             },
             {
-                "name" : "<PREFIX>birthdays <month>",
-                "value" : "See the server's birthdays in the given month.",
+                "name" : "<PREFIX>birthdays <optional month>",
+                "value" : "See the server's birthdays. Specify a month to see the birthdays in that specific month.",
                 "inline" : false
             },
             {

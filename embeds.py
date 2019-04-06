@@ -114,7 +114,7 @@ def upcoming_birthdays(users, guild):
     return embed
 
 def recent_birthdays(users, guild):
-    embed = discord.Embed(title=f'Recent Birthdays', color=config.default_color())
+    embed = discord.Embed(title='Recent Birthdays', color=config.default_color())
     embed.set_author(name=guild.name, icon_url=guild.icon_url)
     embed.set_thumbnail(url=guild.icon_url)
 
@@ -128,6 +128,36 @@ def recent_birthdays(users, guild):
         embed.description = 'No recent birthdays.'
 
     return embed
+
+def birthday_list(users, guild):
+    embed = discord.Embed(title='Birthday List', color=config.default_color())
+    embed.set_author(name=guild.name, icon_url=guild.icon_url)
+    embed.set_thumbnail(url=guild.icon_url)
+
+    if len(users) == 0:
+        embed.description = 'No registered birthdays.'
+        return embed
+
+    try:
+        for month in range(1, 13):
+            birthdays = [user for user in users if user.birthdate.month == month]
+            if len(birthdays) == 0:
+                continue
+
+            birthdays.sort(key=lambda x: x.birthdate.day)
+            text = ''
+            
+            for user in birthdays:
+                member = guild.get_member(user.id)
+                if member is None:
+                    continue
+                text += f'{member} - {utils.month_name[month]} {utils.ordinal_number(user.birthdate.day)}\n'
+
+            embed.add_field(name=utils.month_name[month], value=text, inline=False)
+
+        return embed
+    except:
+        return None           
 
 def birthdays_in_month(month, users, guild):
     embed = discord.Embed(title=f'Birthdays in {utils.month_name[month]}', color=config.default_color())

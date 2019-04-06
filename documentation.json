@@ -48,11 +48,11 @@
     },
     "birthdays" : {
         "title" : "Command: birthdays",
-        "description" : "See the server's birthdays in the given month.",
+        "description" : "Listing the birthdays in the server.",
         "fields" : [
             {
                 "name" : "Proper Usage",
-                "value" : "<PREFIX>birthdays <month>",
+                "value" : "<PREFIX>birthdays <optional month>",
                 "inline" : false
             },
             {
